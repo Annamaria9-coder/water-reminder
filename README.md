@@ -1,4 +1,4 @@
-# 💧 Anna's Water Reminder - https://water-reminder-amber.vercel.app/
+# 💧 Anna's Water Reminder 
 
 I created this app to remind me to drink water. I noticed I kept skipping it during the day, especially when I was busy. Since water is important and I didn't want to ignore that, I made this little app to send me reminders while I'm working or studying.
 

@@ -1,12 +1,41 @@
-# React + Vite
+# Anna's Water Reminder
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+I created this app to remind me to drink water. I noticed I kept skipping it during the day, especially when I was busy. Since water is important and I didn't want to ignore that, I made this little app to send me reminders while I'm working or studying.
 
-Currently, two official plugins are available:
+## About the App
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Anna's Water Reminder is a simple, personal web application designed to help track daily water intake. It doesn't require any login or account - just open the app and start tracking. The clean, calming interface makes it easy to see your progress throughout the day and receive gentle reminders to stay hydrated.
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Water Intake Tracking**: Visual progress circle showing your daily water consumption
+- **Simple Counter**: One-click button to log each glass of water
+- **Customizable Goals**: Set your own daily water intake target
+- **Browser Notifications**: Get friendly reminders at your chosen interval
+- **No Account Needed**: Just open and use - no sign-up required
+- **Clean Interface**: Calming design that's easy on the eyes
+
+## Tech Stack
+
+- React
+- Styled Components
+- React Circular Progressbar
+- Browser Notifications API
+- Vite (for fast development)
+- Vercel (for hosting)
+
+## Screenshots
+
+![App Screenshot](screenshot.png)
+
+## Getting Started
+
+To run this project locally:
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```

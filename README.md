@@ -40,7 +40,7 @@ Anna's Water Reminder is a simple, personal web application designed to help tra
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="screenshot.png" alt="App Screenshot" width="400px" />
+  <img width="907" alt="image" src="https://github.com/user-attachments/assets/a6abe7eb-5f88-4e04-9d65-d817a7e23a6d" />
 </div>
 
 ## 🚀 Getting Started

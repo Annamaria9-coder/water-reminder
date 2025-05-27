@@ -167,47 +167,96 @@ function App() {
   const [reminderTimerId, setReminderTimerId] = useState(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // Request notification permission on component mount
+  // Check notification permission on component mount
   useEffect(() => {
     if ("Notification" in window) {
-      Notification.requestPermission().then(permission => {
-        setNotificationsEnabled(permission === "granted");
-      });
+      // Check if permission is already granted
+      if (Notification.permission === "granted") {
+        setNotificationsEnabled(true);
+      } else if (Notification.permission !== "denied") {
+        // Only request if not already denied to avoid browser restrictions
+        Notification.requestPermission().then(permission => {
+          setNotificationsEnabled(permission === "granted");
+        });
+      }
     }
   }, []);
 
   // Set up reminders whenever the interval changes or notifications are enabled
   useEffect(() => {
+    console.log("Setting up notification effect. Enabled:", notificationsEnabled);
+    
     // Clear any existing timer
     if (reminderTimerId) {
+      console.log("Clearing existing timer");
       clearInterval(reminderTimerId);
+      setReminderTimerId(null);
     }
     
     // Only set up a new timer if notifications are enabled
-    if (notificationsEnabled) {
-      const timerId = setInterval(() => {
-        new Notification("Water Reminder", {
-          body: "Time to drink a glass of water!",
-          icon: "/water-icon.png"
+    if (notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
+      try {
+        // Convert minutes to milliseconds for the interval
+        const intervalMs = reminderInterval * 60 * 1000;
+        console.log(`Setting up notification timer for ${reminderInterval} minutes (${intervalMs}ms)`);
+        
+        const timerId = setInterval(() => {
+          console.log("Timer triggered - sending notification");
+          try {
+            new Notification("Water Reminder", {
+              body: "Time to drink a glass of water!",
+              icon: "/vite.svg"
+            });
+          } catch (error) {
+            console.error("Error sending notification:", error);
+          }
+        }, intervalMs);
+        
+        setReminderTimerId(timerId);
+        
+        // Send an immediate test notification
+        console.log("Sending initial notification");
+        new Notification("Water Reminder Activated", {
+          body: `You'll be reminded every ${reminderInterval} minute${reminderInterval === 1 ? '' : 's'} to drink water.`,
+          icon: "/vite.svg"
         });
-      }, reminderInterval * 60 * 1000);
-      
-      setReminderTimerId(timerId);
-      
-      // Send an immediate notification to confirm it's working
-      new Notification("Water Reminder Activated", {
-        body: `You'll be reminded every ${reminderInterval} minutes to drink water.`,
-        icon: "/water-icon.png"
-      });
+      } catch (error) {
+        console.error("Error setting up notification timer:", error);
+      }
+    } else {
+      console.log("Notifications not enabled or permission not granted");
     }
     
     // Cleanup function to clear the interval when component unmounts or dependencies change
     return () => {
       if (reminderTimerId) {
+        console.log("Cleanup: clearing timer");
         clearInterval(reminderTimerId);
       }
     };
   }, [reminderInterval, notificationsEnabled]);
+
+  // REMOVE THIS ENTIRE FUNCTION - It's duplicated below with improvements
+  // const requestNotificationPermission = () => {
+  //   if ("Notification" in window) {
+  //     Notification.requestPermission().then(permission => {
+  //       const isEnabled = permission === "granted";
+  //       setNotificationsEnabled(isEnabled);
+  //       
+  //       // Provide feedback to the user
+  //       if (isEnabled) {
+  //         alert("Notifications enabled! You'll receive water reminders.");
+  //       } else {
+  //         alert("Notification permission denied. You won't receive reminders.");
+  //       }
+  //     }).catch(error => {
+  //       console.error("Error requesting notification permission:", error);
+  //       alert("There was an error enabling notifications. Please check your browser settings.");
+  //     });
+  //   } else {
+  //     alert("Your browser doesn't support notifications.");
+  //   }
+  // };
 
   // Add water intake
   const addWater = () => {
@@ -229,12 +278,35 @@ function App() {
     setWaterIntake(0);
   };
 
-  // Request notification permission
+  // Request notification permission - improve this function
   const requestNotificationPermission = () => {
     if ("Notification" in window) {
-      Notification.requestPermission().then(permission => {
-        setNotificationsEnabled(permission === "granted");
-      });
+      console.log("Requesting notification permission...");
+      Notification.requestPermission()
+        .then(permission => {
+          console.log("Permission result:", permission);
+          const isEnabled = permission === "granted";
+          setNotificationsEnabled(isEnabled);
+          
+          // Provide feedback to the user
+          if (isEnabled) {
+            alert("Notifications enabled! You'll receive water reminders.");
+            // Send a test notification immediately
+            new Notification("Water Reminder Test", {
+              body: "Notifications are now enabled!",
+              icon: "/vite.svg"
+            });
+          } else {
+            alert("Notification permission denied. You won't receive reminders.");
+          }
+        })
+        .catch(error => {
+          console.error("Error requesting notification permission:", error);
+          alert("There was an error enabling notifications. Please check your browser settings.");
+        });
+    } else {
+      console.error("Notifications not supported");
+      alert("Your browser doesn't support notifications.");
     }
   };
 

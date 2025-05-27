@@ -121,12 +121,17 @@ function ReminderSettings({
   
   const testNotification = () => {
     if ("Notification" in window && Notification.permission === "granted") {
-      new Notification("Water Reminder Test", {
-        body: "This is a test notification. Notifications are working!",
-        icon: "/water-icon.png"
-      });
+      try {
+        new Notification("Water Reminder Test", {
+          body: "This is a test notification. Notifications are working!",
+          icon: "/vite.svg" // Using a known existing icon
+        });
+      } catch (error) {
+        console.error("Error sending test notification:", error);
+        alert("Error sending test notification: " + error.message);
+      }
     } else {
-      alert("Notifications are not enabled. Please enable them in your browser settings.");
+      alert("Notifications are not enabled. Please enable them using the button below.");
     }
   };
 
@@ -152,7 +157,9 @@ function ReminderSettings({
           value={reminderInterval} 
           onChange={(e) => setReminderInterval(Number(e.target.value))}
         >
-          <option value={10}>10 minutes (Testing)</option>
+          <option value={1}>1 minute (Testing)</option>
+          <option value={5}>5 minutes (Testing)</option>
+          <option value={10}>10 minutes</option>
           <option value={30}>30 minutes</option>
           <option value={60}>1 hour</option>
           <option value={90}>1.5 hours</option>
@@ -168,23 +175,21 @@ function ReminderSettings({
         </NotificationStatus>
         <NotificationButton 
           enabled={notificationsEnabled}
-          onClick={requestNotificationPermission}
+          onClick={notificationsEnabled ? testNotification : requestNotificationPermission}
         >
           {notificationsEnabled ? "Test Notification" : "Enable Notifications"}
         </NotificationButton>
       </NotificationRow>
       
-      <ResetButton onClick={resetWater}>
-        Reset Counter
-      </ResetButton>
-      
       <div style={{ display: 'flex', marginTop: '1rem' }}>
         <ResetButton onClick={resetWater}>
           Reset Counter
         </ResetButton>
-        <TestButton onClick={testNotification}>
-          Test Notification Now
-        </TestButton>
+        {notificationsEnabled && (
+          <TestButton onClick={testNotification}>
+            Test Notification Now
+          </TestButton>
+        )}
       </div>
     </SettingsContainer>
   );

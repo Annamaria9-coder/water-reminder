@@ -164,49 +164,50 @@ function App() {
           <Subtitle>Stay hydrated throughout the day</Subtitle>
         </Header>
         
-        <ProgressContainer>
-          <CircularProgressbar
-            value={progressPercentage}
-            text={`${waterIntake}/${goal}`}
-            styles={buildStyles({
-              textSize: '16px',
-              pathColor: `rgba(33, 150, 243, ${progressPercentage / 100})`,
-              textColor: '#2196f3',
-              trailColor: '#d6eaff',
-              backgroundColor: '#3e98c7',
-            })}
-          />
-        </ProgressContainer>
+        // In the return statement, update the WaterButton section:
+                <ProgressContainer>
+                  <CircularProgressbar
+                    value={progressPercentage}
+                    text={`${waterIntake}/${goal}`}
+                    styles={buildStyles({
+                      textSize: '16px',
+                      pathColor: `rgba(33, 150, 243, ${progressPercentage / 100})`,
+                      textColor: '#2196f3',
+                      trailColor: '#d6eaff',
+                      backgroundColor: '#3e98c7',
+                    })}
+                  />
+                </ProgressContainer>
+                
+                <WaterButton onClick={addWater} />
+                
+                <StatsContainer>
+                  <StatBox>
+                    <StatTitle>Glasses</StatTitle>
+                    <StatValue>{waterIntake}</StatValue>
+                  </StatBox>
+                  <StatBox>
+                    <StatTitle>Goal</StatTitle>
+                    <StatValue>{goal}</StatValue>
+                  </StatBox>
+                  <StatBox>
+                    <StatTitle>Remaining</StatTitle>
+                    <StatValue>{Math.max(goal - waterIntake, 0)}</StatValue>
+                  </StatBox>
+                </StatsContainer>
+                
+                <ReminderSettings
+                  reminderInterval={reminderInterval}
+                  setReminderInterval={setReminderInterval}
+                  notificationsEnabled={notificationsEnabled}
+                  requestNotificationPermission={requestNotificationPermission}
+                  goal={goal}
+                  setGoal={setGoal}
+                  resetWater={resetWater}
+                />
+              </AppContainer>
+            </>
+          );
+        }
         
-        <WaterButton onClick={addWater} />
-        
-        <StatsContainer>
-          <StatBox>
-            <StatTitle>Glasses</StatTitle>
-            <StatValue>{waterIntake}</StatValue>
-          </StatBox>
-          <StatBox>
-            <StatTitle>Goal</StatTitle>
-            <StatValue>{goal}</StatValue>
-          </StatBox>
-          <StatBox>
-            <StatTitle>Remaining</StatTitle>
-            <StatValue>{Math.max(goal - waterIntake, 0)}</StatValue>
-          </StatBox>
-        </StatsContainer>
-        
-        <ReminderSettings
-          reminderInterval={reminderInterval}
-          setReminderInterval={setReminderInterval}
-          notificationsEnabled={notificationsEnabled}
-          requestNotificationPermission={requestNotificationPermission}
-          goal={goal}
-          setGoal={setGoal}
-          resetWater={resetWater}
-        />
-      </AppContainer>
-    </>
-  );
-}
-
-export default App;
+        export default App;

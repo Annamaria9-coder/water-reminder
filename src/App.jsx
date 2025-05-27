@@ -164,7 +164,6 @@ function App() {
           <Subtitle>Stay hydrated throughout the day</Subtitle>
         </Header>
         
-        // In the return statement, update the WaterButton section:
                 <ProgressContainer>
                   <CircularProgressbar
                     value={progressPercentage}

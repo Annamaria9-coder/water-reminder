@@ -113,28 +113,12 @@ function ReminderSettings({
   reminderInterval, 
   setReminderInterval, 
   notificationsEnabled,
-  requestNotificationPermission,
+  requestNotificationPermission, // This is now toggleNotifications
   goal,
   setGoal,
   resetWater
 }) {
   
-  const testNotification = () => {
-    if ("Notification" in window && Notification.permission === "granted") {
-      try {
-        new Notification("Water Reminder Test", {
-          body: "This is a test notification. Notifications are working!",
-          icon: "/vite.svg" // Using a known existing icon
-        });
-      } catch (error) {
-        console.error("Error sending test notification:", error);
-        alert("Error sending test notification: " + error.message);
-      }
-    } else {
-      alert("Notifications are not enabled. Please enable them using the button below.");
-    }
-  };
-
   return (
     <SettingsContainer>
       <SettingsTitle>Settings</SettingsTitle>
@@ -170,14 +154,14 @@ function ReminderSettings({
       <NotificationRow enabled={notificationsEnabled}>
         <NotificationStatus enabled={notificationsEnabled}>
           {notificationsEnabled 
-            ? "✅ Notifications enabled" 
-            : "❌ Notifications disabled"}
+            ? "✅ Reminders enabled" 
+            : "❌ Reminders disabled"}
         </NotificationStatus>
         <NotificationButton 
           enabled={notificationsEnabled}
-          onClick={notificationsEnabled ? testNotification : requestNotificationPermission}
+          onClick={requestNotificationPermission}
         >
-          {notificationsEnabled ? "Test Notification" : "Enable Notifications"}
+          {notificationsEnabled ? "Disable Reminders" : "Enable Reminders"}
         </NotificationButton>
       </NotificationRow>
       
@@ -185,11 +169,6 @@ function ReminderSettings({
         <ResetButton onClick={resetWater}>
           Reset Counter
         </ResetButton>
-        {notificationsEnabled && (
-          <TestButton onClick={testNotification}>
-            Test Notification Now
-          </TestButton>
-        )}
       </div>
     </SettingsContainer>
   );

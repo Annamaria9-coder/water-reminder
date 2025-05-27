@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -159,32 +159,100 @@ const Celebration = () => {
   );
 };
 
+// Add these new styled components for the popup reminder
+const popIn = keyframes`
+  0% { transform: scale(0.5); opacity: 0; }
+  85% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+const shake = keyframes`
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+`;
+
+const ReminderPopup = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: ${popIn} 0.5s forwards, ${shake} 0.5s 0.5s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 90%;
+  width: 350px;
+`;
+
+const ReminderIcon = styled.div`
+  font-size: 4rem;
+  margin-bottom: 1rem;
+`;
+
+const ReminderTitle = styled.h2`
+  color: #2196f3;
+  margin-bottom: 1rem;
+  text-align: center;
+`;
+
+const ReminderText = styled.p`
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1.1rem;
+`;
+
+const ReminderButton = styled.button`
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 0.75rem 1.5rem;
+  font-family: 'Space Mono', monospace;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  
+  &:hover {
+    background-color: #1976d2;
+  }
+`;
+
+
 function App() {
   const [waterIntake, setWaterIntake] = useState(0);
-  const [goal, setGoal] = useState(8); // Default goal: 8 glasses
-  const [reminderInterval, setReminderInterval] = useState(10); // Changed default to 10 minutes for testing
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [goal, setGoal] = useState(8);
+  const [reminderInterval, setReminderInterval] = useState(10);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true); // Default to true for our new system
   const [reminderTimerId, setReminderTimerId] = useState(null);
   const [showCelebration, setShowCelebration] = useState(false);
-
-  // Check notification permission on component mount
+  const [showReminder, setShowReminder] = useState(false);
+  const audioRef = useRef(null);
+  
+  // Set up audio element
   useEffect(() => {
-    if ("Notification" in window) {
-      // Check if permission is already granted
-      if (Notification.permission === "granted") {
-        setNotificationsEnabled(true);
-      } else if (Notification.permission !== "denied") {
-        // Only request if not already denied to avoid browser restrictions
-        Notification.requestPermission().then(permission => {
-          setNotificationsEnabled(permission === "granted");
-        });
+    // Create audio element
+    const audio = new Audio('/audio/water-drop.mp3');
+    audio.volume = 0.7;
+    audioRef.current = audio;
+    
+    return () => {
+      // Clean up
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
-    }
+    };
   }, []);
 
   // Set up reminders whenever the interval changes or notifications are enabled
   useEffect(() => {
-    console.log("Setting up notification effect. Enabled:", notificationsEnabled);
+    console.log("Setting up reminder effect. Enabled:", notificationsEnabled);
     
     // Clear any existing timer
     if (reminderTimerId) {
@@ -194,37 +262,40 @@ function App() {
     }
     
     // Only set up a new timer if notifications are enabled
-    if (notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
+    if (notificationsEnabled) {
       try {
         // Convert minutes to milliseconds for the interval
         const intervalMs = reminderInterval * 60 * 1000;
-        console.log(`Setting up notification timer for ${reminderInterval} minutes (${intervalMs}ms)`);
+        console.log(`Setting up reminder timer for ${reminderInterval} minutes (${intervalMs}ms)`);
         
         const timerId = setInterval(() => {
-          console.log("Timer triggered - sending notification");
+          console.log("Timer triggered - showing reminder");
           try {
-            new Notification("Water Reminder", {
-              body: "Time to drink a glass of water!",
-              icon: "/vite.svg"
-            });
+            // Play sound
+            if (audioRef.current) {
+              audioRef.current.currentTime = 0;
+              audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+            }
+            
+            // Show popup
+            setShowReminder(true);
+            
+            // Vibrate if supported
+            if (navigator.vibrate) {
+              navigator.vibrate([200, 100, 200]);
+            }
           } catch (error) {
-            console.error("Error sending notification:", error);
+            console.error("Error showing reminder:", error);
           }
         }, intervalMs);
         
         setReminderTimerId(timerId);
         
         // Send an immediate test notification
-        console.log("Sending initial notification");
-        new Notification("Water Reminder Activated", {
-          body: `You'll be reminded every ${reminderInterval} minute${reminderInterval === 1 ? '' : 's'} to drink water.`,
-          icon: "/vite.svg"
-        });
+        console.log("Setting up first reminder");
       } catch (error) {
-        console.error("Error setting up notification timer:", error);
+        console.error("Error setting up reminder timer:", error);
       }
-    } else {
-      console.log("Notifications not enabled or permission not granted");
     }
     
     // Cleanup function to clear the interval when component unmounts or dependencies change
@@ -235,28 +306,6 @@ function App() {
       }
     };
   }, [reminderInterval, notificationsEnabled]);
-
-  // REMOVE THIS ENTIRE FUNCTION - It's duplicated below with improvements
-  // const requestNotificationPermission = () => {
-  //   if ("Notification" in window) {
-  //     Notification.requestPermission().then(permission => {
-  //       const isEnabled = permission === "granted";
-  //       setNotificationsEnabled(isEnabled);
-  //       
-  //       // Provide feedback to the user
-  //       if (isEnabled) {
-  //         alert("Notifications enabled! You'll receive water reminders.");
-  //       } else {
-  //         alert("Notification permission denied. You won't receive reminders.");
-  //       }
-  //     }).catch(error => {
-  //       console.error("Error requesting notification permission:", error);
-  //       alert("There was an error enabling notifications. Please check your browser settings.");
-  //     });
-  //   } else {
-  //     alert("Your browser doesn't support notifications.");
-  //   }
-  // };
 
   // Add water intake
   const addWater = () => {
@@ -278,36 +327,24 @@ function App() {
     setWaterIntake(0);
   };
 
-  // Request notification permission - improve this function
-  const requestNotificationPermission = () => {
-    if ("Notification" in window) {
-      console.log("Requesting notification permission...");
-      Notification.requestPermission()
-        .then(permission => {
-          console.log("Permission result:", permission);
-          const isEnabled = permission === "granted";
-          setNotificationsEnabled(isEnabled);
-          
-          // Provide feedback to the user
-          if (isEnabled) {
-            alert("Notifications enabled! You'll receive water reminders.");
-            // Send a test notification immediately
-            new Notification("Water Reminder Test", {
-              body: "Notifications are now enabled!",
-              icon: "/vite.svg"
-            });
-          } else {
-            alert("Notification permission denied. You won't receive reminders.");
-          }
-        })
-        .catch(error => {
-          console.error("Error requesting notification permission:", error);
-          alert("There was an error enabling notifications. Please check your browser settings.");
-        });
-    } else {
-      console.error("Notifications not supported");
-      alert("Your browser doesn't support notifications.");
+  // Toggle notifications
+  const toggleNotifications = () => {
+    setNotificationsEnabled(!notificationsEnabled);
+    if (!notificationsEnabled) {
+      // If enabling, show a test reminder after 3 seconds
+      setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+        }
+        setShowReminder(true);
+      }, 3000);
     }
+  };
+
+  // Dismiss reminder
+  const dismissReminder = () => {
+    setShowReminder(false);
   };
 
   // Calculate progress percentage
@@ -317,55 +354,70 @@ function App() {
     <>
       <GlobalStyle />
       {showCelebration && <Celebration />}
+      {showReminder && (
+        <ReminderPopup>
+          <ReminderIcon>💧</ReminderIcon>
+          <ReminderTitle>Time to Hydrate!</ReminderTitle>
+          <ReminderText>It's time to drink a glass of water. Stay hydrated for better health!</ReminderText>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <ReminderButton onClick={() => { addWater(); dismissReminder(); }}>
+              I Drank Water
+            </ReminderButton>
+            <ReminderButton onClick={dismissReminder} style={{ backgroundColor: '#9e9e9e' }}>
+              Remind Later
+            </ReminderButton>
+          </div>
+        </ReminderPopup>
+      )}
       <AppContainer>
         <Header>
           <Title>Water Reminder</Title>
           <Subtitle>Stay hydrated throughout the day</Subtitle>
         </Header>
         
-                <ProgressContainer>
-                  <CircularProgressbar
-                    value={progressPercentage}
-                    text={`${waterIntake}/${goal}`}
-                    styles={buildStyles({
-                      textSize: '16px',
-                      pathColor: `rgba(33, 150, 243, ${progressPercentage / 100})`,
-                      textColor: '#2196f3',
-                      trailColor: '#d6eaff',
-                      backgroundColor: '#3e98c7',
-                    })}
-                  />
-                </ProgressContainer>
-                
-                <WaterButton onClick={addWater} />
-                
-                <StatsContainer>
-                  <StatBox>
-                    <StatTitle>Glasses</StatTitle>
-                    <StatValue>{waterIntake}</StatValue>
-                  </StatBox>
-                  <StatBox>
-                    <StatTitle>Goal</StatTitle>
-                    <StatValue>{goal}</StatValue>
-                  </StatBox>
-                  <StatBox>
-                    <StatTitle>Remaining</StatTitle>
-                    <StatValue>{Math.max(goal - waterIntake, 0)}</StatValue>
-                  </StatBox>
-                </StatsContainer>
-                
-                <ReminderSettings
-                  reminderInterval={reminderInterval}
-                  setReminderInterval={setReminderInterval}
-                  notificationsEnabled={notificationsEnabled}
-                  requestNotificationPermission={requestNotificationPermission}
-                  goal={goal}
-                  setGoal={setGoal}
-                  resetWater={resetWater}
-                />
-              </AppContainer>
-            </>
-          );
-        }
+        <ProgressContainer>
+          <CircularProgressbar
+            value={progressPercentage}
+            text={`${waterIntake}/${goal}`}
+            styles={buildStyles({
+              textSize: '16px',
+              pathColor: `rgba(33, 150, 243, ${progressPercentage / 100})`,
+              textColor: '#2196f3',
+              trailColor: '#d6eaff',
+              backgroundColor: '#3e98c7',
+            })}
+          />
+        </ProgressContainer>
         
-        export default App;
+        <WaterButton onClick={addWater} />
+        
+        <StatsContainer>
+          <StatBox>
+            <StatTitle>Glasses</StatTitle>
+            <StatValue>{waterIntake}</StatValue>
+          </StatBox>
+          <StatBox>
+            <StatTitle>Goal</StatTitle>
+            <StatValue>{goal}</StatValue>
+          </StatBox>
+          <StatBox>
+            <StatTitle>Remaining</StatTitle>
+            <StatValue>{Math.max(goal - waterIntake, 0)}</StatValue>
+          </StatBox>
+        </StatsContainer>
+        
+        <ReminderSettings
+          reminderInterval={reminderInterval}
+          setReminderInterval={setReminderInterval}
+          notificationsEnabled={notificationsEnabled}
+          requestNotificationPermission={toggleNotifications}
+          goal={goal}
+          setGoal={setGoal}
+          resetWater={resetWater}
+        />
+      </AppContainer>
+    </>
+  );
+}
+
+export default App;

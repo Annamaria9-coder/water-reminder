@@ -237,7 +237,7 @@ function App() {
   // Set up audio element
   useEffect(() => {
     // Create audio element
-    const audio = new Audio('/audio/water-drop.mp3');
+    const audio = new Audio('/audio/water-drop.wav'); // Changed from .mp3 to .wav
     audio.volume = 0.7;
     audioRef.current = audio;
     

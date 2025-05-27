@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import styled, { createGlobalStyle } from 'styled-components';
+import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import WaterButton from './components/WaterButton';
@@ -84,12 +84,88 @@ const StatValue = styled.p`
   color: #2196f3;
 `;
 
+// Animation keyframes for celebration effects
+const fadeInOut = keyframes`
+  0% { opacity: 0; transform: scale(0.8); }
+  10% { opacity: 1; transform: scale(1.1); }
+  90% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1); }
+`;
+
+const float = keyframes`
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(10deg); }
+  100% { transform: translateY(-40px) rotate(0deg); }
+`;
+
+const CelebrationContainer = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.9);
+  animation: ${fadeInOut} 4s forwards;
+  pointer-events: none;
+`;
+
+const CelebrationMessage = styled.div`
+  font-size: 2rem;
+  font-weight: bold;
+  color: #2196f3;
+  text-align: center;
+  margin-bottom: 1rem;
+`;
+
+const WaterDropsContainer = styled.div`
+  position: relative;
+  width: 100%;
+  height: 200px;
+`;
+
+const WaterDrop = styled.div`
+  position: absolute;
+  font-size: ${props => props.size || '2rem'};
+  left: ${props => props.left};
+  top: ${props => props.top};
+  animation: ${float} ${props => props.duration || '2s'} ease-in forwards;
+  opacity: 0.8;
+`;
+
+const Celebration = () => {
+  return (
+    <CelebrationContainer>
+      <CelebrationMessage>Goal Reached! 🎉</CelebrationMessage>
+      <CelebrationMessage>Great job staying hydrated!</CelebrationMessage>
+      <WaterDropsContainer>
+        {[...Array(15)].map((_, i) => (
+          <WaterDrop 
+            key={i}
+            left={`${Math.random() * 100}%`}
+            top={`${Math.random() * 100}%`}
+            size={`${1 + Math.random() * 2}rem`}
+            duration={`${1 + Math.random() * 3}s`}
+          >
+            💧
+          </WaterDrop>
+        ))}
+      </WaterDropsContainer>
+    </CelebrationContainer>
+  );
+};
+
 function App() {
   const [waterIntake, setWaterIntake] = useState(0);
   const [goal, setGoal] = useState(8); // Default goal: 8 glasses
   const [reminderInterval, setReminderInterval] = useState(10); // Changed default to 10 minutes for testing
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [reminderTimerId, setReminderTimerId] = useState(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Request notification permission on component mount
   useEffect(() => {
@@ -135,7 +211,17 @@ function App() {
 
   // Add water intake
   const addWater = () => {
-    setWaterIntake(prev => prev + 1);
+    const newIntake = waterIntake + 1;
+    setWaterIntake(newIntake);
+    
+    // Check if goal is reached with this addition
+    if (newIntake === goal) {
+      setShowCelebration(true);
+      // Hide celebration after 4 seconds
+      setTimeout(() => {
+        setShowCelebration(false);
+      }, 4000);
+    }
   };
 
   // Reset water intake (for a new day)
@@ -158,6 +244,7 @@ function App() {
   return (
     <>
       <GlobalStyle />
+      {showCelebration && <Celebration />}
       <AppContainer>
         <Header>
           <Title>Water Reminder</Title>
